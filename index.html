@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trajectory Targeter: Projectile Motion Lab</title>
+    <style>
+        body {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+            min-height: 100vh;
+        }
+        h1 {
+            margin-top: 10px;
+            margin-bottom: 5px;
+            font-size: clamp(20px, 4vw, 26px);
+            color: #4da6ff;
+            text-align: center;
+        }
+        p.subtitle {
+            margin: 0 0 15px 0;
+            color: #aaaaaa;
+            font-size: clamp(12px, 2.5vw, 14px);
+            text-align: center;
+        }
+        #game-container {
+            position: relative;
+            background-color: #2d2d2d;
+            border: 2px solid #555;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            overflow: hidden;
+            width: 100%;
+            max-width: 800px;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 800 / 500;
+        }
+        #ui-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            pointer-events: none;
+            min-width: 190px;
+            box-sizing: border-box;
+        }
+        .stat {
+            margin: 4px 0;
+            font-family: monospace;
+            font-size: clamp(11px, 2vw, 13px);
+        }
+        .stat-highlight {
+            color: #ffcc00;
+            font-weight: bold;
+        }
+        #controls-grid {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 800px;
+        }
+        .control-group {
+            background-color: #252525;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 10px;
+            flex: 1;
+            min-width: 180px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .control-group h3 {
+            margin: 0 0 4px 0;
+            font-size: 13px;
+            color: #4da6ff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+        .btn-row {
+            display: flex;
+            gap: 4px;
+        }
+        button {
+            background-color: #4da6ff;
+            color: #000;
+            border: none;
+            padding: 10px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            flex: 1;
+            text-align: center;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        button:hover {
+            background-color: #3388dd;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        button:disabled {
+            background-color: #444;
+            color: #777;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background-color: #444;
+            color: #fff;
+            border: 1px solid #666;
+        }
+        .btn-secondary:hover {
+            background-color: #555;
+        }
+        .btn-toggle {
+            background-color: #5b4dff;
+            color: #fff;
+        }
+        .btn-toggle:hover {
+            background-color: #4033dd;
+        }
+        .btn-action {
+            background-color: #00b3b3;
+            color: #fff;
+            padding: 12px;
+            font-size: 15px;
+        }
+        .btn-action:hover {
+            background-color: #008080;
+        }
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+        .modal-content {
+            background: #222;
+            border: 2px solid #4da6ff;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 520px;
+            width: 90%;
+            text-align: left;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.7);
+        }
+        .modal-content h2 {
+            margin-top: 0;
+            color: #4da6ff;
+            font-size: 22px;
+            text-align: center;
+        }
+        .modal-content ul {
+            padding-left: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .modal-content li {
+            margin-bottom: 8px;
+        }
+        #result-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 20px 30px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+            border: 2px solid #fff;
+            z-index: 5;
+            width: 70%;
+            max-width: 360px;
+        }
+        #result-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Trajectory Targeter: Projectile Motion Lab</h1>
+    <p class="subtitle">BSEMC Experiment Simulation - Perfect for Mobile or Desktop</p>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        
+        <div id="ui-panel">
+            <div class="stat" id="stat-mode">Mode: Linear</div>
+            <div class="stat" id="stat-time">Time: 0.000 s</div>
+            <div class="stat" id="stat-pos">Ball: (0.00, 20.00) m</div>
+            <div class="stat" id="stat-vy">Vel (y): 0.00 m/s</div>
+            <div class="stat" id="stat-vx">Vel (x): 0.00 m/s</div>
+            <hr style="border-color: #444; margin: 6px 0;">
+            <div class="stat" id="stat-plat-x">Platform X: 5.00 m</div>
+            <div class="stat" id="stat-plat-u">Platform u: 2.00 m/s</div>
+            <div class="stat" id="stat-goal" class="stat-highlight">Target Vx: Calibrating...</div>
+        </div>
+
+        <div id="instructions-overlay" class="modal-overlay">
+            <div class="modal-content">
+                <h2>Laboratory Framework & Vectors</h2>
+                <ul>
+                    <li><strong>Linear Setup:</strong> Object launches horizontally from the top altitude ($h_0 = 20.0\text{ m}$). It undergoes clean vertical gravity degradation.</li>
+                    <li><strong>Non-Linear Setup:</strong> Object fires upward from the floor pad ($y = 0.0\text{ m}$) with a constant vertical boost ($V_{y0} = 15.0\text{ m/s}$), creating an atmospheric parabola.</li>
+                    <li><strong>Dynamic Constraints:</strong> You can tune the platform's initial positioning ($x_0$) and constant lateral velocity ($u$) to construct your own cinematic word problems.</li>
+                    <li><strong>Analytical Solution:</strong> Match your initial horizontal asset tracking parameter ($V_x$) to the computed system requirements to score a perfect center intercept!</li>
+                </ul>
+                <button style="width: 100%; margin-top: 10px;" onclick="closeInstructions()">Initiate Controls</button>
+            </div>
+        </div>
+
+        <div id="result-overlay">
+            <div id="result-title">System Triangulation</div>
+            <div class="stat" id="res-time">Flight Time: -</div>
+            <div class="stat" id="res-vx">Target Vx Required: -</div>
+            <button style="margin-top: 15px; width: 100%;" class="btn-secondary" onclick="resetGame()">Recalibrate System</button>
+        </div>
+    </div>
+
+    <div id="controls-grid">
+        <div class="control-group">
+            <h3>Ball Tracking Profile</h3>
+            <button id="btn-mode" class="btn-toggle" onclick="toggleMode()">Mode: Linear (Drop)</button>
+            <div class="btn-row">
+                <button class="btn-secondary" onclick="adjustVx(-0.25)">-0.25</button>
+                <button class="btn-secondary" onclick="adjustVx(0.25)">+0.25</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Platform Base (x₀)</h3>
+            <div class="btn-row">
+                <button class="btn-secondary" onclick="adjustX0(-1.0)">-1.0m</button>
+                <button class="btn-secondary" onclick="adjustX0(1.0)">+1.0m</button>
+            </div>
+            <div class="btn-row">
+                <button class="btn-secondary" onclick="adjustX0(-5.0)">-5.0m</button>
+                <button class="btn-secondary" onclick="adjustX0(5.0)">+5.0m</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Platform Rate (u)</h3>
+            <div class="btn-row">
+                <button class="btn-secondary" onclick="adjustU(-0.5)">-0.5</button>
+                <button class="btn-secondary" onclick="adjustU(0.5)">+0.5</button>
+            </div>
+            <div class="btn-row">
+                <button class="btn-secondary" onclick="adjustU(-2.0)">-2.0</button>
+                <button class="btn-secondary" onclick="adjustU(2.0)">+2.0</button>
+            </div>
+        </div>
+
+        <div class="control-group" style="min-width: 200px;">
+            <h3>Simulation Engine</h3>
+            <button id="btn-drop" class="btn-action" onclick="triggerDrop()">LAUNCH (Space)</button>
+            <div class="btn-row">
+                <button class="btn-secondary" onclick="resetGame()">Reset (R)</button>
+                <button class="btn-secondary" style="background-color: #555;" onclick="showInstructions()">Info</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Fixed Scientific Environment Vectors
+        const g = 9.81;            
+        const h0 = 20.0;           
+        const platWidth = 2.0;     
+        const ballVy0_Nonlinear = 15.0; // Uniform vertical velocity configuration for non-linear launch profile
+        
+        // Variable Physics Environment values
+        let x0 = 5.0;            
+        let u = 2.0;             
+        let motionMode = 'linear'; // 'linear' or 'nonlinear'
+
+        // Render Scale Parameters
+        const scale = 20;          
+        const groundY = 440;       
+        const startXScreen = 120;  
+
+        // Live Frame Simulation States
+        let ballY, ballX, ballVy, ballVx, platformX;
+        let time, dropped, landed;
+        let lastTimestamp = 0;
+        let animationFrameId;
+
+        function init() {
+            time = 0;
+            dropped = false;
+            landed = false;
+            
+            if (typeof ballVx === 'undefined') ballVx = 4.0; 
+
+            // Correct coordinate instantiation based on configuration requirements
+            if (motionMode === 'linear') {
+                ballY = h0;
+                ballVy = 0;
+            } else {
+                ballY = 0;
+                ballVy = ballVy0_Nonlinear;
+            }
+            ballX = 0;
+            platformX = x0;
+            
+            document.getElementById('result-overlay').style.display = 'none';
+            document.getElementById('btn-drop').disabled = false;
+            toggleControlInteractivity(false);
+            updateUI();
+            draw();
+        }
+
+        function toggleMode() {
+            if (dropped) return;
+            motionMode = motionMode === 'linear' ? 'nonlinear' : 'linear';
+            document.getElementById('btn-mode').innerText = motionMode === 'linear' ? "Mode: Linear (Drop)" : "Mode: Non-Linear (Arc)";
+            init();
+        }
+
+        function adjustVx(amount) {
+            if (dropped) return;
+            ballVx = Math.max(0, ballVx + amount); 
+            updateUI();
+            draw();
+        }
+
+        function adjustX0(amount) {
+            if (dropped) return;
+            x0 = Math.max(1.0, Math.min(25.0, x0 + amount)); 
+            init();
+        }
+
+        function adjustU(amount) {
+            if (dropped) return;
+            u = Math.max(-5.0, Math.min(10.0, u + amount)); 
+            init();
+        }
+
+        function calculateExpectedVx() {
+            let tFall = 0;
+            if (motionMode === 'linear') {
+                // Derived from: h0 = 0.5 * g * t^2
+                tFall = Math.sqrt((2 * h0) / g);
+            } else {
+                // Derived from standard flight duration equation: t = (2 * Vy0) / g
+                tFall = (2 * ballVy0_Nonlinear) / g;
+            }
+            // Analytical matching criterion formulation: Vx = (x0 / tFall) + u
+            let expectedVx = (x0 / tFall) + u;
+            return { vx: expectedVx, time: tFall };
+        }
+
+        function toggleControlInteractivity(disabled) {
+            document.getElementById('btn-mode').disabled = disabled;
+            const buttons = document.querySelectorAll('#controls-grid button:not(#btn-drop)');
+            buttons.forEach(btn => {
+                if(btn.innerText !== "Reset (R)" && btn.innerText !== "Info") {
+                    btn.disabled = disabled;
+                }
+            });
+        }
+
+        function triggerDrop() {
+            if (dropped || document.getElementById('instructions-overlay').style.display === 'flex') return;
+            dropped = true;
+            document.getElementById('btn-drop').disabled = true;
+            toggleControlInteractivity(true);
+            lastTimestamp = performance.now();
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        function resetGame() {
+            cancelAnimationFrame(animationFrameId);
+            init();
+        }
+
+        function showInstructions() {
+            if (dropped && !landed) return; 
+            document.getElementById('instructions-overlay').style.display = 'flex';
+        }
+
+        function closeInstructions() {
+            document.getElementById('instructions-overlay').style.display = 'none';
+        }
+
+        function gameLoop(timestamp) {
+            let dt = (timestamp - lastTimestamp) / 1000;
+            if (dt > 0.1) dt = 0.1; 
+            lastTimestamp = timestamp;
+
+            updatePhysics(dt);
+            draw();
+            updateUI();
+
+            if (!landed) {
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function updatePhysics(dt) {
+            // Platform tracks linear uniform displacement mapping continuously
+            platformX += u * dt;
+
+            if (dropped && !landed) {
+                time += dt;
+                
+                // Acceleration vector calculations matching formal kinematic laws
+                ballVy -= g * dt;            
+                ballY += ballVy * dt;        
+                ballX += ballVx * dt;        
+
+                // Collision handling criteria bounding to target surface plane
+                if (ballVy < 0 && ballY <= 0) {
+                    ballY = 0;
+                    landed = true;
+                    checkLanding();
+                }
+            }
+        }
+
+        function checkLanding() {
+            let platLeft = platformX - (platWidth / 2);
+            let platRight = platformX + (platWidth / 2);
+            let hit = (ballX >= platLeft && ballX <= platRight);
+            
+            const resOverlay = document.getElementById('result-overlay');
+            const resTitle = document.getElementById('result-title');
+            const metrics = calculateExpectedVx();
+            
+            resOverlay.style.display = 'block';
+            document.getElementById('res-time').innerText = `Flight Time: ${time.toFixed(3)} s (Expected: ${metrics.time.toFixed(3)}s)`;
+            document.getElementById('res-vx').innerText = `Target Required Vx: ${metrics.vx.toFixed(2)} m/s`;
+            
+            if (hit) {
+                resTitle.innerText = "🎯 Intercept Success!";
+                resTitle.style.color = "#4caf50";
+                resOverlay.style.borderColor = "#4caf50";
+            } else {
+                resTitle.innerText = "❌ Trajectory Deviation!";
+                resTitle.style.color = "#f44336";
+                resOverlay.style.borderColor = "#f44336";
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Ground Surface Realization
+            ctx.fillStyle = '#3a3a3a';
+            ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, groundY);
+            ctx.lineTo(canvas.width, groundY);
+            ctx.stroke();
+
+            // Tracking Reference Axis Line (Origin Index Line)
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([6, 6]);
+            ctx.beginPath();
+            ctx.moveTo(startXScreen, groundY - (h0 * scale));
+            ctx.lineTo(startXScreen, groundY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Linear Moving Target Platform Setup
+            let pScreenX = startXScreen + (platformX * scale);
+            let pScreenW = platWidth * scale;
+            ctx.fillStyle = '#3388dd';
+            ctx.fillRect(pScreenX - pScreenW/2, groundY - 14, pScreenW, 14);
+            
+            // Critical Evaluation Center Targeting Block
+            ctx.fillStyle = '#ffcc00';
+            ctx.fillRect(pScreenX - 3, groundY - 14, 6, 14);
+
+            // Launched Ball Mass Asset
+            let bScreenX = startXScreen + (ballX * scale);
+            let bScreenY = groundY - (ballY * scale);
+            
+            // Draw a faint vector projection trace when idle
+            if (!dropped) {
+                ctx.strokeStyle = 'rgba(77, 166, 255, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(bScreenX, bScreenY);
+                if (motionMode === 'linear') {
+                    ctx.quadraticCurveTo(bScreenX + (ballVx * 20), bScreenY, bScreenX + (ballVx * 40), groundY);
+                } else {
+                    let m = calculateExpectedVx();
+                    ctx.quadraticCurveTo(bScreenX + (ballVx * m.time * 10), bScreenY - 60, bScreenX + (ballVx * m.time * 20), groundY);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            ctx.fillStyle = '#ff4d4d';
+            ctx.beginPath();
+            ctx.arc(bScreenX, bScreenY, 9, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+
+        function updateUI() {
+            const metrics = calculateExpectedVx();
+
+            document.getElementById('stat-mode').innerText = `Mode: ${motionMode === 'linear' ? 'Linear (Drop)' : 'Non-Linear (Arc)'}`;
+            document.getElementById('stat-time').innerText = `Time: ${time.toFixed(3)} s`;
+            document.getElementById('stat-pos').innerText = `Ball: (${ballX.toFixed(2)}, ${Math.max(0, ballY).toFixed(2)}) m`;
+            document.getElementById('stat-vy').innerText = `Vel (y): ${ballVy.toFixed(2)} m/s`;
+            document.getElementById('stat-vx').innerText = `Vel (x): ${ballVx.toFixed(2)} m/s`;
+            document.getElementById('stat-plat-x').innerText = `Platform X: ${platformX.toFixed(2)} m`;
+            document.getElementById('stat-plat-u').innerText = `Platform u: ${u.toFixed(2)} m/s`;
+            document.getElementById('stat-goal').innerText = `Target Vx: ${metrics.vx.toFixed(2)} m/s`;
+        }
+
+        // Standard Keyboard Interrupt Controls
+        window.addEventListener('keydown', (e) => {
+            if (document.getElementById('instructions-overlay').style.display === 'flex') return;
+            
+            if (e.code === 'Space') {
+                e.preventDefault();
+                triggerDrop();
+            }
+            if (e.code === 'ArrowRight') {
+                adjustVx(0.25);
+            }
+            if (e.code === 'ArrowLeft') {
+                adjustVx(-0.25);
+            }
+            if (e.code === 'KeyR') {
+                resetGame();
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>
