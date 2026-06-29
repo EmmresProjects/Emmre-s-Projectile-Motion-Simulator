@@ -2,578 +2,1016 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trajectory Targeter: Projectile Motion Lab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Emmre's Projectile Motion Simulator</title>
     <style>
+        :root {
+            --bg-color: #0f1115;
+            --panel-bg: #1a1d24;
+            --text-color: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --border: #334155;
+            --success: #10b981;
+            --success-hover: #059669;
+            --info: #6366f1;
+        }
+
         body {
-            background-color: #1e1e1e;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 16px;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 0;
-            padding: 10px;
-            box-sizing: border-box;
             min-height: 100vh;
+            overflow-y: auto;
+            touch-action: manipulation;
         }
-        h1 {
-            margin-top: 10px;
-            margin-bottom: 5px;
-            font-size: clamp(20px, 4vw, 26px);
-            color: #4da6ff;
-            text-align: center;
-        }
-        p.subtitle {
-            margin: 0 0 15px 0;
-            color: #aaaaaa;
-            font-size: clamp(12px, 2.5vw, 14px);
-            text-align: center;
-        }
-        #game-container {
-            position: relative;
-            background-color: #2d2d2d;
-            border: 2px solid #555;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            overflow: hidden;
+
+        .top-bar {
             width: 100%;
-            max-width: 800px;
+            max-width: 1400px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-shrink: 0;
         }
+
+        .top-bar h1 {
+            color: var(--accent);
+            margin: 0;
+            font-size: clamp(22px, 4vw, 32px);
+        }
+
+        .btn-about {
+            background-color: var(--info);
+            padding: 10px 18px;
+            font-size: 15px;
+            border-radius: 8px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-about:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            width: 100%;
+            max-width: 1600px;
+            justify-content: center;
+            flex: 1;
+            align-items: flex-start;
+        }
+
+        .controls {
+            background: var(--panel-bg);
+            padding: 28px 24px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 340px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+
+        .section-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+            margin-bottom: -4px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-size: 14.5px;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #0f1115;
+            color: white;
+            font-size: 16px;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .grid-inputs {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .grid-inputs .input-group {
+            flex: 1;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .grid-inputs .input-group label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #0f1115;
+            padding: 12px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .checkbox-group input {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 17px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .btn-analysis {
+            background-color: var(--success);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-analysis:hover {
+            background-color: var(--success-hover);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .canvas-container {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            flex: 1 1 700px;
+            min-width: 320px;
+            min-height: 550px;
+            position: relative;
+            overflow: auto;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.6);
+            max-height: 85vh;
+            display: block;
+            margin-bottom: 16px;
+        }
+
         canvas {
             display: block;
-            width: 100%;
-            height: auto;
-            aspect-ratio: 800 / 500;
+            image-rendering: crisp-edges;
+            transform-origin: top left;
         }
-        #ui-panel {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid #444;
-            pointer-events: none;
-            min-width: 190px;
-            box-sizing: border-box;
-        }
-        .stat {
-            margin: 4px 0;
-            font-family: monospace;
-            font-size: clamp(11px, 2vw, 13px);
-        }
-        .stat-highlight {
-            color: #ffcc00;
-            font-weight: bold;
-        }
-        #controls-grid {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-            width: 100%;
-            max-width: 800px;
-        }
-        .control-group {
-            background-color: #252525;
-            border: 1px solid #444;
-            border-radius: 6px;
-            padding: 10px;
-            flex: 1;
-            min-width: 180px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .control-group h3 {
-            margin: 0 0 4px 0;
-            font-size: 13px;
-            color: #4da6ff;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            text-align: center;
-        }
-        .btn-row {
-            display: flex;
-            gap: 4px;
-        }
-        button {
-            background-color: #4da6ff;
-            color: #000;
-            border: none;
-            padding: 10px 12px;
+
+        #legend {
+            margin-top: 12px;
+            padding: 12px 20px;
+            background: var(--panel-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            max-width: 700px;
             font-size: 14px;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            flex: 1;
-            text-align: center;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-        button:hover {
-            background-color: #3388dd;
-        }
-        button:active {
-            transform: scale(0.98);
-        }
-        button:disabled {
-            background-color: #444;
-            color: #777;
-            cursor: not-allowed;
-        }
-        .btn-secondary {
-            background-color: #444;
-            color: #fff;
-            border: 1px solid #666;
-        }
-        .btn-secondary:hover {
-            background-color: #555;
-        }
-        .btn-toggle {
-            background-color: #5b4dff;
-            color: #fff;
-        }
-        .btn-toggle:hover {
-            background-color: #4033dd;
-        }
-        .btn-action {
-            background-color: #00b3b3;
-            color: #fff;
-            padding: 12px;
-            font-size: 15px;
-        }
-        .btn-action:hover {
-            background-color: #008080;
-        }
-        .modal-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            color: var(--text-muted);
             display: flex;
-            flex-direction: column;
+            gap: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
             justify-content: center;
             align-items: center;
             padding: 20px;
-            box-sizing: border-box;
-            z-index: 10;
+            backdrop-filter: blur(8px);
         }
+
         .modal-content {
-            background: #222;
-            border: 2px solid #4da6ff;
-            border-radius: 8px;
-            padding: 20px;
-            max-width: 520px;
-            width: 90%;
-            text-align: left;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.7);
+            background: var(--panel-bg);
+            padding: 32px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 760px;
+            max-height: 92vh;
+            overflow-y: auto;
+            box-shadow: 0 30px 70px -10px rgba(0, 0, 0, 0.8);
+            animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .modal-content h2 {
-            margin-top: 0;
-            color: #4da6ff;
-            font-size: 22px;
-            text-align: center;
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.85) translateY(40px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
-        .modal-content ul {
-            padding-left: 20px;
-            font-size: 14px;
-            line-height: 1.5;
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 18px;
+            margin-bottom: 24px;
         }
-        .modal-content li {
-            margin-bottom: 8px;
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--accent);
+            font-size: 26px;
         }
-        #result-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.95);
-            padding: 20px 30px;
-            border-radius: 8px;
-            text-align: center;
+
+        .close-btn {
+            background: none;
+            color: white;
+            font-size: 32px;
+            border: none;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        
+        .close-btn:hover {
+            color: var(--accent);
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .about-text h3 { color: #f8fafc; margin-bottom: 8px; font-size: 22px; }
+        .about-text p { color: var(--text-muted); line-height: 1.7; margin-bottom: 12px; }
+        .about-text .highlight { color: var(--success); font-weight: bold; }
+        
+        .start-btn-large { width: 100%; margin-top: 24px; font-size: 18px; padding: 18px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+            background: #0f1115;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td { border: 1px solid var(--border); padding: 14px 10px; text-align: center; font-size: 15px; }
+        th { background-color: #1e293b; color: var(--accent); font-weight: 600; }
+
+        .answers-box {
+            background: rgba(59, 130, 246, 0.12);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 28px;
+            border-left: 5px solid var(--accent);
+        }
+        .answers-box p { margin: 10px 0; font-size: 16.5px; }
+
+        .vector-box {
             display: none;
-            border: 2px solid #fff;
-            z-index: 5;
-            width: 70%;
-            max-width: 360px;
+            text-align: center;
+            margin-bottom: 28px;
+            background: #0f1115;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
         }
-        #result-title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
+
+        #vectorCanvas {
+            background: #1a1d24;
+            border-radius: 8px;
+            margin-top: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        @media (max-width: 900px) {
+            .container { flex-direction: column; align-items: stretch; }
+            .controls { max-width: 100%; }
+            .canvas-container { min-height: 460px; flex: 1 1 auto; }
+            body { padding: 12px; }
+        }
+
+        @media (max-width: 600px) {
+            .canvas-container { min-height: 420px; }
+            #legend { font-size: 13px; gap: 16px; }
         }
     </style>
 </head>
 <body>
 
-    <h1>Trajectory Targeter: Projectile Motion Lab</h1>
-    <p class="subtitle">BSEMC Experiment Simulation - Perfect for Mobile or Desktop</p>
+    <div class="top-bar">
+        <h1>Emmre's Projectile Simulator</h1>
+        <button class="btn-about" onclick="openAbout()">About this Program</button>
+    </div>
 
-    <div id="game-container">
-        <canvas id="gameCanvas" width="800" height="500"></canvas>
-        
-        <div id="ui-panel">
-            <div class="stat" id="stat-mode">Mode: Linear</div>
-            <div class="stat" id="stat-time">Time: 0.000 s</div>
-            <div class="stat" id="stat-pos">Ball: (0.00, 20.00) m</div>
-            <div class="stat" id="stat-vy">Vel (y): 0.00 m/s</div>
-            <div class="stat" id="stat-vx">Vel (x): 0.00 m/s</div>
-            <hr style="border-color: #444; margin: 6px 0;">
-            <div class="stat" id="stat-plat-x">Platform X: 5.00 m</div>
-            <div class="stat" id="stat-plat-u">Platform u: 2.00 m/s</div>
-            <div class="stat" id="stat-goal" class="stat-highlight">Target Vx: Calibrating...</div>
-        </div>
-
-        <div id="instructions-overlay" class="modal-overlay">
-            <div class="modal-content">
-                <h2>Laboratory Framework & Vectors</h2>
-                <ul>
-                    <li><strong>Linear Setup:</strong> Object launches horizontally from the top altitude ($h_0 = 20.0\text{ m}$). It undergoes clean vertical gravity degradation.</li>
-                    <li><strong>Non-Linear Setup:</strong> Object fires upward from the floor pad ($y = 0.0\text{ m}$) with a constant vertical boost ($V_{y0} = 15.0\text{ m/s}$), creating an atmospheric parabola.</li>
-                    <li><strong>Dynamic Constraints:</strong> You can tune the platform's initial positioning ($x_0$) and constant lateral velocity ($u$) to construct your own cinematic word problems.</li>
-                    <li><strong>Analytical Solution:</strong> Match your initial horizontal asset tracking parameter ($V_x$) to the computed system requirements to score a perfect center intercept!</li>
-                </ul>
-                <button style="width: 100%; margin-top: 10px;" onclick="closeInstructions()">Initiate Controls</button>
+    <div class="container">
+        <div class="controls">
+            <div class="section-title">Motion Parameters</div>
+            <div class="input-group">
+                <label for="simType">Motion Type</label>
+                <select id="simType" onchange="toggleInputs(); drawStatic();">
+                    <option value="1">Type 1 (Horizontal)</option>
+                    <option value="2" selected>Type 2 (Angled)</option>
+                </select>
             </div>
+
+            <div class="input-group">
+                <label for="inputVelocity">Initial Velocity (m/s)</label>
+                <input type="number" id="inputVelocity" step="any" placeholder="e.g. 35" value="" onchange="if(!isSimulating) drawStatic();">
+            </div>
+
+            <div class="input-group" id="groupType1" style="display:none;">
+                <label for="inputHeight">Vertical Displacement (m)</label>
+                <input type="number" id="inputHeight" step="any" placeholder="e.g. 176.4" value="" onchange="if(!isSimulating) drawStatic();">
+            </div>
+
+            <div class="input-group" id="groupType2">
+                <label for="inputAngle">Angle of Projection (°)</label>
+                <input type="number" id="inputAngle" step="any" placeholder="e.g. 45" value="" onchange="if(!isSimulating) drawStatic();">
+            </div>
+
+            <div class="section-title" style="margin-top: 10px;">Simulation Settings</div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="checkTrail" onchange="toggleInterval()" checked>
+                <label for="checkTrail" style="cursor: pointer; margin:0; font-weight: 600; font-size: 14.5px; color:#cbd5e1;">Show position per time</label>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="checkTrajectory" onchange="if(!isSimulating) drawStatic();" checked>
+                <label for="checkTrajectory" style="cursor: pointer; margin:0; font-weight: 600; font-size: 14.5px; color:#cbd5e1;">Show Trajectory</label>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="checkAutoGrid" onchange="toggleAutoGrid(); if(!isSimulating) drawStatic();" checked>
+                <label for="checkAutoGrid" style="cursor: pointer; margin:0; font-weight: 600; font-size: 14.5px; color:#cbd5e1;">Automatic Grid Spacing</label>
+            </div>
+
+            <div class="input-group" id="groupInterval">
+                <label for="inputInterval">Seconds per Interval (s)</label>
+                <input type="number" id="inputInterval" step="any" placeholder="e.g. 0.5" value="0.5">
+            </div>
+
+            <div class="section-title" style="margin-top: 10px;">Grid Spacing (m)</div>
+            
+            <div class="grid-inputs">
+                <div class="input-group">
+                    <label for="gridX">Horizontal</label>
+                    <input type="number" id="gridX" step="any" min="1" value="10" onchange="validateGridInput(this); if(!isSimulating) drawStatic();">
+                </div>
+                <div class="input-group">
+                    <label for="gridY">Vertical</label>
+                    <input type="number" id="gridY" step="any" min="1" value="5" onchange="validateGridInput(this); if(!isSimulating) drawStatic();">
+                </div>
+            </div>
+
+            <button onclick="startSimulation()">Start Simulation</button>
+            <button class="btn-analysis" onclick="showAnalysis()">Show Motion Analysis</button>
         </div>
 
-        <div id="result-overlay">
-            <div id="result-title">System Triangulation</div>
-            <div class="stat" id="res-time">Flight Time: -</div>
-            <div class="stat" id="res-vx">Target Vx Required: -</div>
-            <button style="margin-top: 15px; width: 100%;" class="btn-secondary" onclick="resetGame()">Recalibrate System</button>
+        <div class="canvas-container" id="simContainer">
+            <canvas id="simCanvas"></canvas>
+        </div>
+        
+        <div id="legend">
+            <div><span style="color: #fbbf24; font-weight: bold;">●</span> Position at Time</div>
+            <div><span style="color: #3b82f6;">●</span> Current Projectile</div>
+            <div><strong>T</strong>: Time (s) &nbsp; <strong>x</strong>: Horizontal (m) &nbsp; <strong>y</strong>: Vertical (m)</div>
+        </div>
+
+        <!-- Zoom Controls -->
+        <div style="margin-top: 10px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <button onclick="zoomIn()" style="padding: 10px 20px; font-size: 15px;">🔍 Zoom In</button>
+            <button onclick="zoomOut()" style="padding: 10px 20px; font-size: 15px;">🔍 Zoom Out</button>
+            <button onclick="resetZoom()" style="padding: 10px 20px; font-size: 15px;">Reset Zoom</button>
         </div>
     </div>
 
-    <div id="controls-grid">
-        <div class="control-group">
-            <h3>Ball Tracking Profile</h3>
-            <button id="btn-mode" class="btn-toggle" onclick="toggleMode()">Mode: Linear (Drop)</button>
-            <div class="btn-row">
-                <button class="btn-secondary" onclick="adjustVx(-0.25)">-0.25</button>
-                <button class="btn-secondary" onclick="adjustVx(0.25)">+0.25</button>
+    <div id="aboutModal" class="modal" style="display: flex;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Welcome to the Simulator</h2>
+                <button class="close-btn" onclick="closeAbout()">&times;</button>
+            </div>
+            <div class="about-text">
+                <h3>Emmre's Projectile Motion Simulator</h3>
+                <p><strong>BSEMC Experiment Simulation - Perfect for Mobile and Desktop</strong></p>
+                <hr style="border-color: var(--border); margin: 15px 0;">
+                <p><span class="highlight">Created by:</span> Group 1 from GE012 - 11 (College Physics)</p>
+                <p><span class="highlight">Programmer:</span> Emmanuel Angelo M. De Castro</p>
+                <br>
+                <p><strong>Description:</strong></p>
+                <p>A dynamic physics simulator tracking Type 1 (Horizontal) and Type 2 (Angled) Projectile Motion. Custom map the grid, define coordinates, and lay down position-time trails. It dynamically generates comprehensive Motion Analysis Tables and Vector Graphs once completed.</p>
+                
+                <button class="start-btn-large" onclick="closeAbout()">Start Simulator</button>
             </div>
         </div>
+    </div>
 
-        <div class="control-group">
-            <h3>Platform Base (x₀)</h3>
-            <div class="btn-row">
-                <button class="btn-secondary" onclick="adjustX0(-1.0)">-1.0m</button>
-                <button class="btn-secondary" onclick="adjustX0(1.0)">+1.0m</button>
+    <div id="analysisModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Motion Analysis</h2>
+                <button class="close-btn" onclick="closeAnalysis()">&times;</button>
             </div>
-            <div class="btn-row">
-                <button class="btn-secondary" onclick="adjustX0(-5.0)">-5.0m</button>
-                <button class="btn-secondary" onclick="adjustX0(5.0)">+5.0m</button>
+            
+            <div id="answersContent" class="answers-box"></div>
+            
+            <div id="vectorContent" class="vector-box">
+                <h3 style="margin:0 0 10px 0; color: var(--accent);">Initial Vector Graph</h3>
+                <canvas id="vectorCanvas" width="320" height="220"></canvas>
             </div>
-        </div>
 
-        <div class="control-group">
-            <h3>Platform Rate (u)</h3>
-            <div class="btn-row">
-                <button class="btn-secondary" onclick="adjustU(-0.5)">-0.5</button>
-                <button class="btn-secondary" onclick="adjustU(0.5)">+0.5</button>
-            </div>
-            <div class="btn-row">
-                <button class="btn-secondary" onclick="adjustU(-2.0)">-2.0</button>
-                <button class="btn-secondary" onclick="adjustU(2.0)">+2.0</button>
-            </div>
-        </div>
-
-        <div class="control-group" style="min-width: 200px;">
-            <h3>Simulation Engine</h3>
-            <button id="btn-drop" class="btn-action" onclick="triggerDrop()">LAUNCH (Space)</button>
-            <div class="btn-row">
-                <button class="btn-secondary" onclick="resetGame()">Reset (R)</button>
-                <button class="btn-secondary" style="background-color: #555;" onclick="showInstructions()">Info</button>
+            <h3 style="color: var(--accent); margin-bottom: 12px;">Analysis Table</h3>
+            <div style="overflow-x: auto; border-radius: 10px;">
+                <table id="analysisTable">
+                    <thead>
+                        <tr>
+                            <th>Time (s)</th>
+                            <th>Horizontal (x)</th>
+                            <th>Vertical (y)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
+        const canvas = document.getElementById('simCanvas');
+        const container = document.getElementById('simContainer');
         const ctx = canvas.getContext('2d');
-
-        // Fixed Scientific Environment Vectors
-        const g = 9.81;            
-        const h0 = 20.0;           
-        const platWidth = 2.0;     
-        const ballVy0_Nonlinear = 15.0; // Uniform vertical velocity configuration for non-linear launch profile
+        const g = 9.8; 
         
-        // Variable Physics Environment values
-        let x0 = 5.0;            
-        let u = 2.0;             
-        let motionMode = 'linear'; // 'linear' or 'nonlinear'
+        let isSimulating = false;
+        let simType = 2;
+        let v0 = 0, angle = 0, h0 = 0;
+        let intervalTime = 0.5;
+        let showTrail = true;
+        let showTrajectory = true;
+        let t = 0, t_flight = 0, max_x = 0, max_y = 0;
+        let trails = [];
+        let nextTrailTime = 0;
+        let reqAnimFrame, lastDrawTime = 0;
+        const timeScale = 1.8;
 
-        // Render Scale Parameters
-        const scale = 20;          
-        const groundY = 440;       
-        const startXScreen = 120;  
+        let padX = 90;
+        let padY = 95;
+        let scale = 1, offsetX = 0, offsetY = 0;
+        let cssWidth = 0, cssHeight = 0;
+        let zoomLevel = 1.0;
 
-        // Live Frame Simulation States
-        let ballY, ballX, ballVy, ballVx, platformX;
-        let time, dropped, landed;
-        let lastTimestamp = 0;
-        let animationFrameId;
-
-        function init() {
-            time = 0;
-            dropped = false;
-            landed = false;
-            
-            if (typeof ballVx === 'undefined') ballVx = 4.0; 
-
-            // Correct coordinate instantiation based on configuration requirements
-            if (motionMode === 'linear') {
-                ballY = h0;
-                ballVy = 0;
-            } else {
-                ballY = 0;
-                ballVy = ballVy0_Nonlinear;
-            }
-            ballX = 0;
-            platformX = x0;
-            
-            document.getElementById('result-overlay').style.display = 'none';
-            document.getElementById('btn-drop').disabled = false;
-            toggleControlInteractivity(false);
-            updateUI();
-            draw();
+        function triggerHaptic(duration = 40) {
+            if (navigator.vibrate) navigator.vibrate(duration);
         }
 
-        function toggleMode() {
-            if (dropped) return;
-            motionMode = motionMode === 'linear' ? 'nonlinear' : 'linear';
-            document.getElementById('btn-mode').innerText = motionMode === 'linear' ? "Mode: Linear (Drop)" : "Mode: Non-Linear (Arc)";
-            init();
-        }
-
-        function adjustVx(amount) {
-            if (dropped) return;
-            ballVx = Math.max(0, ballVx + amount); 
-            updateUI();
-            draw();
-        }
-
-        function adjustX0(amount) {
-            if (dropped) return;
-            x0 = Math.max(1.0, Math.min(25.0, x0 + amount)); 
-            init();
-        }
-
-        function adjustU(amount) {
-            if (dropped) return;
-            u = Math.max(-5.0, Math.min(10.0, u + amount)); 
-            init();
-        }
-
-        function calculateExpectedVx() {
-            let tFall = 0;
-            if (motionMode === 'linear') {
-                // Derived from: h0 = 0.5 * g * t^2
-                tFall = Math.sqrt((2 * h0) / g);
-            } else {
-                // Derived from standard flight duration equation: t = (2 * Vy0) / g
-                tFall = (2 * ballVy0_Nonlinear) / g;
-            }
-            // Analytical matching criterion formulation: Vx = (x0 / tFall) + u
-            let expectedVx = (x0 / tFall) + u;
-            return { vx: expectedVx, time: tFall };
-        }
-
-        function toggleControlInteractivity(disabled) {
-            document.getElementById('btn-mode').disabled = disabled;
-            const buttons = document.querySelectorAll('#controls-grid button:not(#btn-drop)');
-            buttons.forEach(btn => {
-                if(btn.innerText !== "Reset (R)" && btn.innerText !== "Info") {
-                    btn.disabled = disabled;
-                }
-            });
-        }
-
-        function triggerDrop() {
-            if (dropped || document.getElementById('instructions-overlay').style.display === 'flex') return;
-            dropped = true;
-            document.getElementById('btn-drop').disabled = true;
-            toggleControlInteractivity(true);
-            lastTimestamp = performance.now();
-            animationFrameId = requestAnimationFrame(gameLoop);
-        }
-
-        function resetGame() {
-            cancelAnimationFrame(animationFrameId);
-            init();
-        }
-
-        function showInstructions() {
-            if (dropped && !landed) return; 
-            document.getElementById('instructions-overlay').style.display = 'flex';
-        }
-
-        function closeInstructions() {
-            document.getElementById('instructions-overlay').style.display = 'none';
-        }
-
-        function gameLoop(timestamp) {
-            let dt = (timestamp - lastTimestamp) / 1000;
-            if (dt > 0.1) dt = 0.1; 
-            lastTimestamp = timestamp;
-
-            updatePhysics(dt);
-            draw();
-            updateUI();
-
-            if (!landed) {
-                animationFrameId = requestAnimationFrame(gameLoop);
-            }
-        }
-
-        function updatePhysics(dt) {
-            // Platform tracks linear uniform displacement mapping continuously
-            platformX += u * dt;
-
-            if (dropped && !landed) {
-                time += dt;
-                
-                // Acceleration vector calculations matching formal kinematic laws
-                ballVy -= g * dt;            
-                ballY += ballVy * dt;        
-                ballX += ballVx * dt;        
-
-                // Collision handling criteria bounding to target surface plane
-                if (ballVy < 0 && ballY <= 0) {
-                    ballY = 0;
-                    landed = true;
-                    checkLanding();
-                }
-            }
-        }
-
-        function checkLanding() {
-            let platLeft = platformX - (platWidth / 2);
-            let platRight = platformX + (platWidth / 2);
-            let hit = (ballX >= platLeft && ballX <= platRight);
-            
-            const resOverlay = document.getElementById('result-overlay');
-            const resTitle = document.getElementById('result-title');
-            const metrics = calculateExpectedVx();
-            
-            resOverlay.style.display = 'block';
-            document.getElementById('res-time').innerText = `Flight Time: ${time.toFixed(3)} s (Expected: ${metrics.time.toFixed(3)}s)`;
-            document.getElementById('res-vx').innerText = `Target Required Vx: ${metrics.vx.toFixed(2)} m/s`;
-            
-            if (hit) {
-                resTitle.innerText = "🎯 Intercept Success!";
-                resTitle.style.color = "#4caf50";
-                resOverlay.style.borderColor = "#4caf50";
-            } else {
-                resTitle.innerText = "❌ Trajectory Deviation!";
-                resTitle.style.color = "#f44336";
-                resOverlay.style.borderColor = "#f44336";
-            }
-        }
-
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Ground Surface Realization
-            ctx.fillStyle = '#3a3a3a';
-            ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
-            ctx.strokeStyle = '#555';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, groundY);
-            ctx.lineTo(canvas.width, groundY);
-            ctx.stroke();
-
-            // Tracking Reference Axis Line (Origin Index Line)
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-            ctx.lineWidth = 1;
-            ctx.setLineDash([6, 6]);
-            ctx.beginPath();
-            ctx.moveTo(startXScreen, groundY - (h0 * scale));
-            ctx.lineTo(startXScreen, groundY);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            // Linear Moving Target Platform Setup
-            let pScreenX = startXScreen + (platformX * scale);
-            let pScreenW = platWidth * scale;
-            ctx.fillStyle = '#3388dd';
-            ctx.fillRect(pScreenX - pScreenW/2, groundY - 14, pScreenW, 14);
-            
-            // Critical Evaluation Center Targeting Block
-            ctx.fillStyle = '#ffcc00';
-            ctx.fillRect(pScreenX - 3, groundY - 14, 6, 14);
-
-            // Launched Ball Mass Asset
-            let bScreenX = startXScreen + (ballX * scale);
-            let bScreenY = groundY - (ballY * scale);
-            
-            // Draw a faint vector projection trace when idle
-            if (!dropped) {
-                ctx.strokeStyle = 'rgba(77, 166, 255, 0.3)';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([4, 4]);
-                ctx.beginPath();
-                ctx.moveTo(bScreenX, bScreenY);
-                if (motionMode === 'linear') {
-                    ctx.quadraticCurveTo(bScreenX + (ballVx * 20), bScreenY, bScreenX + (ballVx * 40), groundY);
-                } else {
-                    let m = calculateExpectedVx();
-                    ctx.quadraticCurveTo(bScreenX + (ballVx * m.time * 10), bScreenY - 60, bScreenX + (ballVx * m.time * 20), groundY);
-                }
-                ctx.stroke();
-                ctx.setLineDash([]);
-            }
-
-            ctx.fillStyle = '#ff4d4d';
-            ctx.beginPath();
-            ctx.arc(bScreenX, bScreenY, 9, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-        }
-
-        function updateUI() {
-            const metrics = calculateExpectedVx();
-
-            document.getElementById('stat-mode').innerText = `Mode: ${motionMode === 'linear' ? 'Linear (Drop)' : 'Non-Linear (Arc)'}`;
-            document.getElementById('stat-time').innerText = `Time: ${time.toFixed(3)} s`;
-            document.getElementById('stat-pos').innerText = `Ball: (${ballX.toFixed(2)}, ${Math.max(0, ballY).toFixed(2)}) m`;
-            document.getElementById('stat-vy').innerText = `Vel (y): ${ballVy.toFixed(2)} m/s`;
-            document.getElementById('stat-vx').innerText = `Vel (x): ${ballVx.toFixed(2)} m/s`;
-            document.getElementById('stat-plat-x').innerText = `Platform X: ${platformX.toFixed(2)} m`;
-            document.getElementById('stat-plat-u').innerText = `Platform u: ${u.toFixed(2)} m/s`;
-            document.getElementById('stat-goal').innerText = `Target Vx: ${metrics.vx.toFixed(2)} m/s`;
-        }
-
-        // Standard Keyboard Interrupt Controls
-        window.addEventListener('keydown', (e) => {
-            if (document.getElementById('instructions-overlay').style.display === 'flex') return;
-            
-            if (e.code === 'Space') {
-                e.preventDefault();
-                triggerDrop();
-            }
-            if (e.code === 'ArrowRight') {
-                adjustVx(0.25);
-            }
-            if (e.code === 'ArrowLeft') {
-                adjustVx(-0.25);
-            }
-            if (e.code === 'KeyR') {
-                resetGame();
-            }
+        window.addEventListener('resize', () => {
+            if (!isSimulating) drawStatic();
         });
 
-        init();
+        function openAbout() { 
+            triggerHaptic(20);
+            document.getElementById('aboutModal').style.display = 'flex'; 
+        }
+        function closeAbout() { 
+            document.getElementById('aboutModal').style.display = 'none'; 
+            if(!isSimulating && t_flight === 0) drawStatic();
+        }
+
+        function toggleInputs() {
+            simType = parseInt(document.getElementById('simType').value);
+            document.getElementById('groupType1').style.display = (simType === 1) ? 'flex' : 'none';
+            document.getElementById('groupType2').style.display = (simType === 2) ? 'flex' : 'none';
+        }
+
+        function toggleInterval() {
+            showTrail = document.getElementById('checkTrail').checked;
+            document.getElementById('groupInterval').style.display = showTrail ? 'flex' : 'none';
+        }
+
+        function toggleAutoGrid() {
+            const autoOn = document.getElementById('checkAutoGrid').checked;
+            document.getElementById('gridX').disabled = autoOn;
+            document.getElementById('gridY').disabled = autoOn;
+            if (!isSimulating) drawStatic();
+        }
+
+        function validateGridInput(input) {
+            let val = parseFloat(input.value);
+            if (isNaN(val) || val < 1) input.value = 1;
+        }
+
+        function zoomIn() {
+            zoomLevel = Math.min(zoomLevel * 1.25, 4.0);
+            if (!isSimulating) drawStatic();
+        }
+
+        function zoomOut() {
+            zoomLevel = Math.max(zoomLevel * 0.8, 0.5);
+            if (!isSimulating) drawStatic();
+        }
+
+        function resetZoom() {
+            zoomLevel = 1.0;
+            if (!isSimulating) drawStatic();
+        }
+
+        toggleInputs(); 
+        toggleInterval();
+        setTimeout(() => {
+            toggleAutoGrid();
+            drawStatic();
+        }, 100); 
+
+        function getPosX(time) {
+            if (simType === 1) return v0 * time;
+            return (v0 * Math.cos(angle * Math.PI / 180)) * time;
+        }
+        function getPosY(time) {
+            if (simType === 1) return h0 - (0.5 * g * time * time);
+            return (v0 * Math.sin(angle * Math.PI / 180)) * time - (0.5 * g * time * time);
+        }
+
+        function calculateLimits() {
+            simType = parseInt(document.getElementById('simType').value);
+            v0 = parseFloat(document.getElementById('inputVelocity').value) || 0;
+            
+            if (simType === 1) {
+                h0 = parseFloat(document.getElementById('inputHeight').value) || 0;
+                angle = 0;
+                t_flight = (h0 > 0) ? Math.sqrt((2 * h0) / g) : 0;
+                max_x = v0 * t_flight;
+                max_y = h0; 
+            } else {
+                angle = parseFloat(document.getElementById('inputAngle').value) || 0;
+                h0 = 0;
+                let voy = v0 * Math.sin(angle * Math.PI / 180);
+                t_flight = (voy > 0) ? (2 * voy) / g : 0;
+                max_x = (v0 * Math.cos(angle * Math.PI / 180)) * t_flight;
+                max_y = Math.pow(voy, 2) / (2 * g); 
+            }
+
+            max_x = Math.max(max_x || 30, 30);
+            max_y = Math.max(max_y || 30, 30);
+        }
+
+        function updateScaling() {
+            let cw = container.clientWidth - 4; 
+            let ch = container.clientHeight - 4;
+
+            let scaleX = cw / (max_x * 1.2);
+            let scaleY = ch / (max_y * 1.35);
+            
+            let baseScale = Math.min(scaleX, scaleY);
+            const MIN_PPM = 6; 
+            if (baseScale < MIN_PPM) baseScale = MIN_PPM;
+
+            baseScale *= zoomLevel;
+
+            cssWidth = Math.max(cw * 1.05, max_x * 1.25 * baseScale + padX * 2);
+            cssHeight = Math.max(ch * 1.05, max_y * 1.4 * baseScale + padY * 2);
+
+            canvas.style.width = cssWidth + 'px';
+            canvas.style.height = cssHeight + 'px';
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = cssWidth * dpr;
+            canvas.height = cssHeight * dpr;
+
+            ctx.setTransform(1, 0, 0, 1, 0, 0); 
+            ctx.scale(dpr, dpr);
+
+            scale = baseScale;
+            offsetX = padX;
+            offsetY = cssHeight - padY;
+        }
+
+        function startSimulation() {
+            triggerHaptic(60);
+            cancelAnimationFrame(reqAnimFrame);
+            
+            showTrail = document.getElementById('checkTrail').checked;
+            showTrajectory = document.getElementById('checkTrajectory').checked;
+            intervalTime = parseFloat(document.getElementById('inputInterval').value) || 0.5;
+
+            let v_check = document.getElementById('inputVelocity').value;
+            if (v_check === "" || parseFloat(v_check) <= 0) { alert("Please enter a valid positive Initial Velocity."); return; }
+
+            if (simType === 1) {
+                let h_check = document.getElementById('inputHeight').value;
+                if (h_check === "" || parseFloat(h_check) <= 0) { alert("Please enter a positive Vertical Displacement."); return; }
+            } else {
+                let a_check = document.getElementById('inputAngle').value;
+                let a_val = parseFloat(a_check);
+                if (a_check === "" || a_val <= 0 || a_val >= 90) { alert("Please enter an Angle between 1° and 89°."); return; }
+            }
+
+            calculateLimits();
+            t = 0; trails = []; nextTrailTime = 0;
+            isSimulating = true;
+            lastDrawTime = performance.now();
+            
+            recordTrail(0);
+            updateScaling();
+
+            container.scrollTop = container.scrollHeight;
+            container.scrollLeft = 0;
+
+            reqAnimFrame = requestAnimationFrame(updateSim);
+        }
+
+        function recordTrail(time) {
+            let x = getPosX(time);
+            let y = getPosY(time);
+            if (y < 0) y = 0;
+            trails.push({ t: time, x: x, y: y });
+        }
+
+        function updateSim(timestamp) {
+            if(!isSimulating) return;
+            let dt = (timestamp - lastDrawTime) / 1000; 
+            lastDrawTime = timestamp;
+            t += dt * timeScale;
+
+            if (showTrail) {
+                while (t >= nextTrailTime + intervalTime) {
+                    nextTrailTime += intervalTime;
+                    if(nextTrailTime < t_flight) recordTrail(nextTrailTime);
+                }
+            }
+
+            if (t >= t_flight) {
+                t = t_flight;
+                if(showTrail && nextTrailTime !== t_flight && t_flight > 0) recordTrail(t_flight); 
+                isSimulating = false;
+                triggerHaptic(80);
+            }
+
+            drawSim();
+            if (isSimulating) reqAnimFrame = requestAnimationFrame(updateSim);
+        }
+
+        function drawGridAndAxes() {
+            let unitX = Math.max(parseFloat(document.getElementById('gridX').value) || 10, 1);
+            let unitY = Math.max(parseFloat(document.getElementById('gridY').value) || 5, 1);
+            
+            const autoGrid = document.getElementById('checkAutoGrid').checked;
+            if (autoGrid) {
+                const niceUnits = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000];
+                unitX = niceUnits.find(u => u * 5 >= max_x) || 20;
+                unitY = niceUnits.find(u => u * 5 >= max_y) || 10;
+            }
+
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = '#2d3748';
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = 'bold 20px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+
+            let x_val = 0;
+            let px = offsetX;
+            while (px < cssWidth + 50) {
+                ctx.beginPath();
+                ctx.moveTo(px, 0);
+                ctx.lineTo(px, cssHeight);
+                ctx.stroke();
+
+                if (px >= offsetX) {
+                    ctx.fillText(x_val.toFixed(0), px, offsetY + 18);
+                }
+                x_val += unitX;
+                px = offsetX + (x_val * scale);
+            }
+
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            let y_val = 0;
+            let py = offsetY;
+            while (py > -50) {
+                ctx.beginPath();
+                ctx.moveTo(0, py);
+                ctx.lineTo(cssWidth, py);
+                ctx.stroke();
+
+                if (py <= offsetY) {
+                    if (y_val === 0) {
+                        ctx.fillText(y_val.toFixed(0), offsetX - 18, py + 20); 
+                    } else {
+                        ctx.fillText(y_val.toFixed(0), offsetX - 18, py);
+                    }
+                }
+                y_val += unitY;
+                py = offsetY - (y_val * scale);
+            }
+
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#64748b';
+            
+            ctx.beginPath();
+            ctx.moveTo(0, offsetY);
+            ctx.lineTo(cssWidth, offsetY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(offsetX, 0);
+            ctx.lineTo(offsetX, cssHeight);
+            ctx.stroke();
+
+            ctx.fillStyle = '#e2e8f0';
+            ctx.font = 'bold 26px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText("Horizontal Distance (m)", offsetX + (cssWidth - offsetX) / 2, offsetY + 85);
+            
+            ctx.save();
+            ctx.translate(35, offsetY - (offsetY) / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText("Vertical Distance (m)", 0, 0);
+            ctx.restore();
+        }
+
+        function drawSim() {
+            ctx.clearRect(0, 0, cssWidth, cssHeight);
+            drawGridAndAxes();
+
+            // Proper smooth parabolic trajectory
+            if (showTrajectory && trails.length > 1) {
+                ctx.beginPath();
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 4.5;
+                ctx.shadowColor = '#60a5fa';
+                ctx.shadowBlur = 18;
+                ctx.moveTo(offsetX + trails[0].x * scale, offsetY - trails[0].y * scale);
+                
+                for (let i = 1; i < trails.length; i++) {
+                    let prev = trails[i-1];
+                    let curr = trails[i];
+                    let cpX = offsetX + (prev.x + curr.x) / 2 * scale;
+                    let cpY = offsetY - (prev.y + curr.y) / 2 * scale - (max_y * 0.08); // lift for nice arc
+                    ctx.quadraticCurveTo(cpX, cpY, offsetX + curr.x * scale, offsetY - curr.y * scale);
+                }
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+
+            ctx.font = '21px Segoe UI'; 
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            
+            for(let i = 0; i < trails.length; i++) {
+                let tr = trails[i];
+                let px = offsetX + tr.x * scale;
+                let py = offsetY - tr.y * scale;
+
+                ctx.shadowColor = '#f59e0b';
+                ctx.shadowBlur = 12;
+                ctx.beginPath();
+                ctx.arc(px, py, 7, 0, Math.PI*2);
+                ctx.fillStyle = '#fbbf24';
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Better anti-overlap spacing
+                let stagger = i % 6;
+                let labelDy = -68 - stagger * 52;
+                let labelDx = 42 + (i % 4) * 18;
+                
+                let textX = px + labelDx;
+                let textY = py + labelDy;
+
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.lineTo(textX - 10, textY + 12);
+                ctx.strokeStyle = 'rgba(251, 191, 36, 0.55)';
+                ctx.lineWidth = 2.8;
+                ctx.stroke();
+
+                let t_str = tr.t.toFixed(2) + "s (T)";
+                let x_str = tr.x.toFixed(1) + "m (x)";
+                let y_str = tr.y.toFixed(1) + "m (y)";
+                let text = `${t_str}   ${x_str}   ${y_str}`;
+
+                let textWidth = ctx.measureText(text).width;
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+                ctx.fillRect(textX - 8, textY - 19, textWidth + 18, 36);
+
+                ctx.fillStyle = '#fefce8';
+                ctx.fillText(text, textX, textY);
+            }
+
+            if (t > 0 || (!isSimulating && trails.length > 0)) {
+                let currX = offsetX + getPosX(t) * scale;
+                let currY = offsetY - getPosY(t) * scale;
+
+                ctx.shadowColor = '#3b82f6';
+                ctx.shadowBlur = 28;
+                ctx.beginPath();
+                ctx.arc(currX, currY, 17, 0, Math.PI*2);
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.4)';
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                ctx.beginPath();
+                ctx.arc(currX, currY, 16, 0, Math.PI*2);
+                ctx.fillStyle = '#3b82f6';
+                ctx.fill();
+
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 4.5;
+                ctx.stroke();
+            }
+        }
+
+        function drawStatic() {
+            calculateLimits();
+            updateScaling();
+            showTrajectory = document.getElementById('checkTrajectory') ? document.getElementById('checkTrajectory').checked : true;
+            drawSim(); 
+        }
+
+        function showAnalysis() {
+            triggerHaptic(30);
+            if (t_flight === 0 && !isSimulating) {
+                alert("Please run a simulation first!");
+                return;
+            }
+            document.getElementById('analysisModal').style.display = 'flex';
+            let answersContent = document.getElementById('answersContent');
+            let tbody = document.getElementById('tableBody');
+            tbody.innerHTML = "";
+
+            if (simType === 1) {
+                let dx = getPosX(t_flight);
+                answersContent.innerHTML = `
+                    <h3 style="margin-top:0; color: #fff;">Type 1 Final Results</h3>
+                    <p><strong>1. Time of Flight:</strong> ${t_flight.toFixed(2)} s</p>
+                    <p><strong>2. Horizontal Range:</strong> ${dx.toFixed(2)} m</p>
+                `;
+                document.getElementById('vectorContent').style.display = 'none';
+            } else {
+                let dx = getPosX(t_flight);
+                let voy = v0 * Math.sin(angle * Math.PI / 180);
+                let dy_max = Math.pow(voy, 2) / (2 * g);
+
+                answersContent.innerHTML = `
+                    <h3 style="margin-top:0; color: #fff;">Type 2 Final Results</h3>
+                    <p><strong>1. Time of Flight:</strong> ${t_flight.toFixed(2)} s</p>
+                    <p><strong>2. Horizontal Range:</strong> ${dx.toFixed(2)} m</p>
+                    <p><strong>3. Maximum Height:</strong> ${dy_max.toFixed(2)} m</p>
+                `;
+                document.getElementById('vectorContent').style.display = 'block';
+                drawVectorGraph();
+            }
+
+            let tableInterval = showTrail ? intervalTime : 0.5;
+            let currentT = 0;
+            while(currentT < t_flight) {
+                appendTableRow(currentT, tbody);
+                currentT += tableInterval;
+            }
+            appendTableRow(t_flight, tbody);
+        }
+
+        function appendTableRow(time, tbody) {
+            let row = document.createElement('tr');
+            let x = getPosX(time);
+            let y = getPosY(time);
+            if (y < 0) y = 0;
+            row.innerHTML = `
+                <td>${time.toFixed(2)}</td>
+                <td>${x.toFixed(2)}</td>
+                <td>${y.toFixed(2)}</td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        function drawVectorGraph() {
+            let vCanvas = document.getElementById('vectorCanvas');
+            let vCtx = vCanvas.getContext('2d');
+            vCtx.clearRect(0, 0, vCanvas.width, vCanvas.height);
+
+            let originX = 55, originY = 175, sc = 3.2; 
+            let vox = v0 * Math.cos(angle * Math.PI / 180);
+            let voy = v0 * Math.sin(angle * Math.PI / 180);
+            let lineX = originX + vox * sc;
+            let lineY = originY - voy * sc;
+
+            vCtx.beginPath();
+            vCtx.moveTo(originX, originY);
+            vCtx.lineTo(lineX, originY);
+            vCtx.lineTo(lineX, lineY);
+            vCtx.closePath();
+            vCtx.fillStyle = 'rgba(59, 130, 246, 0.18)';
+            vCtx.fill();
+
+            function drawArrow(fx, fy, tx, ty, color) {
+                let headlen = 11;
+                let ang = Math.atan2(ty - fy, tx - fx);
+                vCtx.beginPath();
+                vCtx.moveTo(fx, fy);
+                vCtx.lineTo(tx, ty);
+                vCtx.lineTo(tx - headlen * Math.cos(ang - Math.PI / 5.5), ty - headlen * Math.sin(ang - Math.PI / 5.5));
+                vCtx.moveTo(tx, ty);
+                vCtx.lineTo(tx - headlen * Math.cos(ang + Math.PI / 5.5), ty - headlen * Math.sin(ang + Math.PI / 5.5));
+                vCtx.strokeStyle = color;
+                vCtx.lineWidth = 3;
+                vCtx.stroke();
+            }
+
+            drawArrow(originX, originY, lineX, originY, '#10b981');
+            vCtx.fillStyle = '#10b981'; 
+            vCtx.font = '15px Segoe UI';
+            vCtx.fillText(`Vₓ = ${vox.toFixed(1)}`, originX + 18, originY + 26);
+
+            drawArrow(lineX, originY, lineX, lineY, '#f59e0b');
+            vCtx.fillStyle = '#f59e0b';
+            vCtx.fillText(`Vᵧ = ${voy.toFixed(1)}`, lineX + 14, lineY + 22);
+
+            drawArrow(originX, originY, lineX, lineY, '#3b82f6');
+            vCtx.fillStyle = '#3b82f6';
+            vCtx.fillText(`V₀ = ${v0}`, originX + (lineX - originX)/2 - 18, originY - (originY - lineY)/2 - 22);
+
+            vCtx.beginPath();
+            vCtx.arc(originX, originY, 38, 0, -angle * Math.PI / 180, true);
+            vCtx.strokeStyle = '#cbd5e1'; 
+            vCtx.lineWidth = 2.5;
+            vCtx.stroke();
+            vCtx.fillStyle = '#cbd5e1';
+            vCtx.fillText(`${angle}°`, originX + 48, originY - 22);
+        }
+
+        function closeAnalysis() { 
+            document.getElementById('analysisModal').style.display = 'none'; 
+        }
+        
+        window.onclick = function(e) {
+            let modAbout = document.getElementById('aboutModal');
+            let modAnal = document.getElementById('analysisModal');
+            if (e.target == modAbout) closeAbout();
+            if (e.target == modAnal) closeAnalysis();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Enter" && document.getElementById('analysisModal').style.display === 'flex') {
+                closeAnalysis();
+            }
+        });
     </script>
 </body>
 </html>
